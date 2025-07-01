@@ -17,8 +17,6 @@ type OpenAI struct {
 func (o *OpenAI) Request(b RequestBuilder) openai.Response {
 	body, _ := json.Marshal(b.Req)
 
-	println(string(body))
-
 	r := bytes.NewReader(body)
 
 	req, _ := http.NewRequest("POST", "https://api.openai.com/v1/responses", r)
@@ -29,8 +27,6 @@ func (o *OpenAI) Request(b RequestBuilder) openai.Response {
 	res, err := http.DefaultClient.Do(req)
 
 	resBody, _ := io.ReadAll(res.Body)
-
-	println(string(resBody))
 
 	if err != nil {
 		println(err)
