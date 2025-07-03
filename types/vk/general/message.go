@@ -7,11 +7,11 @@ type Message struct {
 	FromID int    `json:"from_id"`
 	Text   string `json:"text"`
 	// FormatData            *FormatData            `json:"format_data,omitempty"`
-	RandomID  int    `json:"random_id,omitempty"`
-	Ref       string `json:"ref,omitempty"`
-	RefSource string `json:"ref_source,omitempty"`
-	// Attachments           []Attachment           `json:"attachments,omitempty"`
-	Important bool `json:"important,omitempty"`
+	RandomID    int          `json:"random_id,omitempty"`
+	Ref         string       `json:"ref,omitempty"`
+	RefSource   string       `json:"ref_source,omitempty"`
+	Attachments []Attachment `json:"attachments,omitempty"`
+	Important   bool         `json:"important,omitempty"`
 	// Geo                   *Geo                   `json:"geo,omitempty"`
 	Payload string `json:"payload,omitempty"`
 	// Keyboard              *Keyboard              `json:"keyboard,omitempty"`

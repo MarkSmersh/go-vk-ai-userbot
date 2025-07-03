@@ -7,6 +7,13 @@ type NewMessage struct {
 	PeerId      int
 	Timestamp   int
 	Text        string
-	Attachments []any
+	Attachments []Attachment
 	RandomId    int
+}
+
+type Attachment struct {
+	ID          int
+	ProductId   int
+	Type        string
+	Attachments []any
 }

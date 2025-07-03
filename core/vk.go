@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"maps"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/MarkSmersh/go-vk-ai-userbot/types/vk/events"
@@ -37,6 +40,8 @@ func (vk *VK) Start() {
 
 	vk.LongpollServer = ls
 
+	slog.Info("Vk Userbot is started")
+
 	vk.longpoll(0)
 }
 
@@ -51,23 +56,25 @@ func (vk *VK) longpoll(ts int) {
 		3,
 	)
 
+	slog.Debug(url)
+
 	res, err := http.Get(url)
 
 	if err != nil {
-		println(url)
-		println(err)
+		slog.Error(err.Error())
 	}
 
 	v := events.Event{}
-
-	// resBody, _ := io.ReadAll(res.Body)
-	// json.Unmarshal(resBody, &v)
 
 	d := json.NewDecoder(res.Body)
 
 	d.UseNumber()
 
 	d.Decode(&v)
+
+	// jsonBytes, _ := json.Marshal(v)
+	//
+	// slog.Debug(string(jsonBytes[:]))
 
 	for _, u := range v.Updates {
 		code, _ := u[0].(json.Number).Int64()
@@ -76,15 +83,70 @@ func (vk *VK) longpoll(ts int) {
 
 		case 4:
 			{
+				attachmentsMap := map[int]events.Attachment{}
+
+				// vk's' idea to put attachments as "attach${i}_product_id" is disgusting
+
+				for k, v := range u[7].(map[string]any) {
+					// "attach1": "62793",
+					// "attach1_product_id": "1308",
+					// "attach1_type": "sticker",
+					//   "attachments": "[{\"type\":\"sticker\",\"sticker\":{\"images\":[{\"height\":64,\"url\":\"https://vk.com/sticker/1-62793-64\",\"width\":64},{\"height\":128,\"url\":\"https://vk.com/sticker/1-62793-128\",\"width\":128},{\"height\":256,\"url\":\"https://vk.com/sticker/1-62793-256\",\"width\":256},{\"height\":352,\"url\":\"https://vk.com/sticker/1-62793-352\",\"width\":352},{\"height\":512,\"url\":\"https://vk.com/sticker/1-62793-512\",\"width\":512}],\"images_with_background\":[{\"height\":64,\"url\":\"https://vk.com/sticker/1-62793-64b\",\"width\":64},{\"height\":128,\"url\":\"https://vk.com/sticker/1-62793-128b\",\"width\":128},{\"height\":256,\"url\":\"https://vk.com/sticker/1-62793-256b\",\"width\":256},{\"height\":352,\"url\":\"https://vk.com/sticker/1-62793-352b\",\"width\":352},{\"height\":512,\"url\":\"https://vk.com/sticker/1-62793-512b\",\"width\":512}],\"product_id\":1308,\"sticker_id\":62793}}]",
+					// "attachments_count": "1"
+
+					if strings.Contains(k, "attachments") {
+						continue
+					}
+
+					// this is why replies won't work
+					if !strings.Contains(k, "attach") {
+						continue
+					}
+
+					// ['1', 'product', 'id']
+
+					tags := strings.Split(strings.Split(k, "attach")[1], "_")
+
+					if len(tags) <= 0 {
+						continue
+					}
+
+					id, _ := strconv.Atoi(tags[0])
+
+					attachment := attachmentsMap[id]
+
+					if len(tags) == 1 {
+						attachment.ID, _ = strconv.Atoi(v.(string))
+					} else if len(tags) > 1 {
+						typo := tags[1]
+
+						if typo == "product" {
+							attachment.ProductId, _ = strconv.Atoi(v.(string))
+						}
+
+						if typo == "type" {
+							attachment.Type = v.(string)
+						}
+					}
+
+					attachmentsMap[id] = attachment
+				}
+
+				attachments := []events.Attachment{}
+
+				for v := range maps.Values(attachmentsMap) {
+					attachments = append(attachments, v)
+				}
+
 				vk.Updater.Messages.Invoke(
 					events.NewMessage{
 						MessageId: jsonNumToInt(u[1]),
 						Flags:     jsonNumToInt(u[2]),
 						// MinorId:   jsonNumToInt(u[3]),
-						PeerId:    jsonNumToInt(u[3]),
-						Timestamp: jsonNumToInt(u[4]),
-						Text:      u[5].(string),
-						// Attachments: u[7],(interface{}),
+						PeerId:      jsonNumToInt(u[3]),
+						Timestamp:   jsonNumToInt(u[4]),
+						Text:        u[5].(string),
+						Attachments: attachments,
 						// RandomId: jsonNumToInt(u[7]),
 					},
 				)
@@ -127,7 +189,7 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 		vk.Version,
 	)
 
-	println(url)
+	slog.Debug(url)
 
 	res, err := http.Get(url)
 
@@ -146,8 +208,7 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 			fmt.Sprintf("VK API Error. Code: %d. Message: %s", v.Error.ErrorCode, v.Error.ErrorMsg),
 		)
 
-		println(e.Error())
-		println(url)
+		slog.Error(e.Error())
 
 		return nil, e
 	}
@@ -200,6 +261,24 @@ type MessagesGetHistoryRes struct {
 func (vk *VK) MessagesGetHistory(params methods.MessagesGetHistory) MessagesGetHistoryRes {
 	res, _ := vk.Request("messages.getHistory", params)
 	v := MessagesGetHistoryRes{}
+	json.Unmarshal(res, &v)
+	return v
+}
+
+type GetStickersKeywordsRes struct {
+	Count      int          `json:"count"`
+	Dictionary []Dictionary `json:"dictionary"`
+}
+
+type Dictionary struct {
+	Words            []string `json:"words"`             // Keywords or Emoji
+	UserStickers     []int    `json:"user_stickers"`     // IDs of owned stickers
+	PromotedStickers []int    `json:"promoted_stickers"` // IDs of promoted stickers
+}
+
+func (vk *VK) StoreGetStickersKeywords(params methods.StoreGetStickersKeywords) GetStickersKeywordsRes {
+	res, _ := vk.Request("store.getStickersKeywords", params)
+	v := GetStickersKeywordsRes{}
 	json.Unmarshal(res, &v)
 	return v
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/MarkSmersh/go-vk-ai-userbot/types/openai"
@@ -29,7 +30,7 @@ func (o *OpenAI) Request(b RequestBuilder) openai.Response {
 	resBody, _ := io.ReadAll(res.Body)
 
 	if err != nil {
-		println(err)
+		slog.Error(err.Error())
 	}
 
 	v := openai.Response{}
