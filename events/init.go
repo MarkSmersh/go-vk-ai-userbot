@@ -3,7 +3,9 @@ package events
 func (b *VKAIUserBot) Init() {
 	b.Vk.Updater.Messages.Add(b.NewMessage)
 
-	go b.Vk.Start()
+	b.CacheFriends()
+	b.EventsFromUnread()
 
-	// messages :=
+	go b.SendFriendRequests()
+	go b.Vk.Start()
 }

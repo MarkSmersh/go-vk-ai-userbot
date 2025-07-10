@@ -61,6 +61,7 @@ func (vk *VK) longpoll(ts int) {
 	res, err := http.Get(url)
 
 	if err != nil {
+		// TODO: Do reconnect for longpoll and requests
 		slog.Error(err.Error())
 	}
 
@@ -279,6 +280,101 @@ type Dictionary struct {
 func (vk *VK) StoreGetStickersKeywords(params methods.StoreGetStickersKeywords) GetStickersKeywordsRes {
 	res, _ := vk.Request("store.getStickersKeywords", params)
 	v := GetStickersKeywordsRes{}
+	json.Unmarshal(res, &v)
+	return v
+}
+
+type GetConversationsRes struct {
+	Count       int                `json:"count"`
+	Items       []ConversationItem `json:"items"`
+	UnreadCount int                `json:"unread_count,omitempty"`
+	Profiles    []general.User     `json:"profiles,omitempty"`
+	Groups      []general.Group    `json:"groups,omitempty"`
+}
+
+type ConversationItem struct {
+	Conversation general.Conversation `json:"conversation"`
+	LastMessage  general.Message      `json:"last_message"`
+}
+
+func (vk *VK) MessagesGetConversations(params methods.MessagesGetConversations) GetConversationsRes {
+	res, _ := vk.Request("messages.getConversations", params)
+	v := GetConversationsRes{}
+	json.Unmarshal(res, &v)
+	return v
+}
+
+type GroupsGetRes struct {
+	Count int             `json:"count"`
+	Items []general.Group `json:"items"`
+}
+
+func (vk *VK) GroupsGet(params methods.GroupsGet) GroupsGetRes {
+	res, _ := vk.Request("groups.get", params)
+	v := GroupsGetRes{}
+	json.Unmarshal(res, &v)
+	return v
+}
+
+type GroupsGetMembersRes struct {
+	Count int
+	Items []general.User
+}
+
+func (vk *VK) GroupsGetMembers(params methods.GroupsGetMembers) GroupsGetMembersRes {
+	res, _ := vk.Request("groups.getMembers", params)
+
+	v := GroupsGetMembersRes{}
+
+	type GroupsGetMembersIntRes struct {
+		Count int
+		Items []int
+	}
+
+	vi := GroupsGetMembersIntRes{}
+
+	json.Unmarshal(res, &vi)
+
+	if len(vi.Items) > 0 {
+		for _, i := range vi.Items {
+			v.Items = append(v.Items, general.User{
+				ID: i,
+			})
+		}
+	} else {
+		json.Unmarshal(res, &v)
+	}
+
+	return v
+}
+
+type FriendGetRes struct {
+	Count int
+	Items []int
+}
+
+func (vk *VK) FriendsGet(params methods.FriendsGet) FriendGetRes {
+	res, _ := vk.Request("friends.get", params)
+	v := FriendGetRes{}
+	json.Unmarshal(res, &v)
+	return v
+}
+
+type FriendGetRequestsRes struct {
+	Count int
+	Items []int
+}
+
+func (vk *VK) FriendsGetRequests(params methods.FriendsGetRequests) FriendGetRequestsRes {
+	res, _ := vk.Request("friends.getRequests", params)
+	v := FriendGetRequestsRes{}
+	json.Unmarshal(res, &v)
+	return v
+}
+
+func (vk *VK) FriendsAdd(params methods.FriendsAdd) int {
+	res, _ := vk.Request("friends.add", params)
+	v := 0
 	json.Unmarshal(res, &v)
 	return v
 }

@@ -7,7 +7,10 @@ type VKAIUserBot struct {
 	OAi         core.OpenAI
 	TypingState core.State[int, bool]
 	InviteState core.State[int, int]
-	Config      VKAIUserBotConfig
+	// Groups you want to use to get friends from
+	TargetGroups []int
+	FriendsAdded []int
+	Config       VKAIUserBotConfig
 }
 
 type VKAIUserBotConfig struct {

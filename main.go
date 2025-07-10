@@ -39,6 +39,9 @@ var bot = events.VKAIUserBot{
 	TypingState: typingState,
 	InviteState: inviteState,
 	Config:      config,
+	// TargetGroups: []int{216632235, 204981431, 205912478}, // it should strike
+	TargetGroups: []int{205912478}, // it should strike
+	FriendsAdded: []int{},
 }
 
 func main() {
