@@ -31,6 +31,8 @@ var config = events.VKAIUserBotConfig{
 	SecondsBeforeWrite: 20,
 	SymbolsPerSecond:   300,
 	Link:               "https://t.me/+4B_CFaEhQtM1MDMy",
+	RequestWait:        60,
+	LLMTemparature:     1.0,
 }
 
 var bot = events.VKAIUserBot{

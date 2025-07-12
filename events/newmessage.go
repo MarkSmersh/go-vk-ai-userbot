@@ -115,7 +115,7 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 			}
 		}
 
-		builder.Req.Temperature = 1.05
+		builder.Req.Temperature = b.Config.LLMTemparature
 
 		v := b.OAi.Request(builder)
 		text := v.Output[0].Content[0].Text

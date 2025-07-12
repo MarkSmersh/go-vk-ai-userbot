@@ -37,10 +37,6 @@ func (b *VKAIUserBot) SendFriendRequests() {
 		}
 	}
 
-	slices.SortFunc(members, func(a, b int) int {
-		return b - a
-	})
-
 	ms := []int{}
 
 	// id 524147853 is used as a head id, and id 632047853 as tail id
@@ -53,6 +49,11 @@ func (b *VKAIUserBot) SendFriendRequests() {
 	}
 
 	members = ms
+
+	// change it to reverse slice of members
+	slices.SortFunc(members, func(a, b int) int {
+		return a - b
+	})
 
 	slog.Info(
 		fmt.Sprintf("Members gathered from TargetGroups (%d). Start sending requests", len(members)),
@@ -68,7 +69,7 @@ func (b *VKAIUserBot) SendFriendRequests() {
 
 			// this is one and only line of code, that keeps VKAPI from blocking account
 			// a truly divine technique
-			time.Sleep(time.Minute)
+			time.Sleep(time.Second * time.Duration(b.Config.RequestWait))
 		}
 	}
 
