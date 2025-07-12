@@ -42,120 +42,123 @@ func (vk *VK) Start() {
 
 	slog.Info("Vk Userbot is started")
 
-	vk.longpoll(0)
+	vk.longpoll()
 }
 
-func (vk *VK) longpoll(ts int) {
-	url := fmt.Sprintf(
-		"https://%s?act=a_check&key=%s&ts=%d&wait=%d&mode=%d&version=%d",
-		vk.LongpollServer.Server,
-		vk.LongpollServer.Key,
-		ts,
-		90,
-		2,
-		3,
-	)
+func (vk *VK) longpoll() {
+	ts := 0
 
-	slog.Debug(url)
+	for {
+		url := fmt.Sprintf(
+			"https://%s?act=a_check&key=%s&ts=%d&wait=%d&mode=%d&version=%d",
+			vk.LongpollServer.Server,
+			vk.LongpollServer.Key,
+			ts,
+			90,
+			2,
+			3,
+		)
 
-	res, err := http.Get(url)
+		slog.Debug(url)
 
-	if err != nil {
-		// TODO: Do reconnect for longpoll and requests
-		slog.Error(err.Error())
-	}
+		res, err := http.Get(url)
 
-	v := events.Event{}
+		if err != nil {
+			// TODO: Do reconnect for longpoll and requests
+			slog.Error(err.Error())
+		}
 
-	d := json.NewDecoder(res.Body)
+		v := events.Event{}
 
-	d.UseNumber()
+		d := json.NewDecoder(res.Body)
 
-	d.Decode(&v)
+		d.UseNumber()
 
-	// jsonBytes, _ := json.Marshal(v)
-	//
-	// slog.Debug(string(jsonBytes[:]))
+		d.Decode(&v)
 
-	for _, u := range v.Updates {
-		code, _ := u[0].(json.Number).Int64()
+		// jsonBytes, _ := json.Marshal(v)
+		//
+		// slog.Debug(string(jsonBytes[:]))
 
-		switch code {
+		for _, u := range v.Updates {
+			code, _ := u[0].(json.Number).Int64()
 
-		case 4:
-			{
-				attachmentsMap := map[int]events.Attachment{}
+			switch code {
 
-				// vk's' idea to put attachments as "attach${i}_product_id" is disgusting
+			case 4:
+				{
+					attachmentsMap := map[int]events.Attachment{}
 
-				for k, v := range u[7].(map[string]any) {
-					// "attach1": "62793",
-					// "attach1_product_id": "1308",
-					// "attach1_type": "sticker",
-					//   "attachments": "[{\"type\":\"sticker\",\"sticker\":{\"images\":[{\"height\":64,\"url\":\"https://vk.com/sticker/1-62793-64\",\"width\":64},{\"height\":128,\"url\":\"https://vk.com/sticker/1-62793-128\",\"width\":128},{\"height\":256,\"url\":\"https://vk.com/sticker/1-62793-256\",\"width\":256},{\"height\":352,\"url\":\"https://vk.com/sticker/1-62793-352\",\"width\":352},{\"height\":512,\"url\":\"https://vk.com/sticker/1-62793-512\",\"width\":512}],\"images_with_background\":[{\"height\":64,\"url\":\"https://vk.com/sticker/1-62793-64b\",\"width\":64},{\"height\":128,\"url\":\"https://vk.com/sticker/1-62793-128b\",\"width\":128},{\"height\":256,\"url\":\"https://vk.com/sticker/1-62793-256b\",\"width\":256},{\"height\":352,\"url\":\"https://vk.com/sticker/1-62793-352b\",\"width\":352},{\"height\":512,\"url\":\"https://vk.com/sticker/1-62793-512b\",\"width\":512}],\"product_id\":1308,\"sticker_id\":62793}}]",
-					// "attachments_count": "1"
+					// vk's' idea to put attachments as "attach${i}_product_id" is disgusting
 
-					if strings.Contains(k, "attachments") {
-						continue
-					}
+					for k, v := range u[7].(map[string]any) {
+						// "attach1": "62793",
+						// "attach1_product_id": "1308",
+						// "attach1_type": "sticker",
+						//   "attachments": "[{\"type\":\"sticker\",\"sticker\":{\"images\":[{\"height\":64,\"url\":\"https://vk.com/sticker/1-62793-64\",\"width\":64},{\"height\":128,\"url\":\"https://vk.com/sticker/1-62793-128\",\"width\":128},{\"height\":256,\"url\":\"https://vk.com/sticker/1-62793-256\",\"width\":256},{\"height\":352,\"url\":\"https://vk.com/sticker/1-62793-352\",\"width\":352},{\"height\":512,\"url\":\"https://vk.com/sticker/1-62793-512\",\"width\":512}],\"images_with_background\":[{\"height\":64,\"url\":\"https://vk.com/sticker/1-62793-64b\",\"width\":64},{\"height\":128,\"url\":\"https://vk.com/sticker/1-62793-128b\",\"width\":128},{\"height\":256,\"url\":\"https://vk.com/sticker/1-62793-256b\",\"width\":256},{\"height\":352,\"url\":\"https://vk.com/sticker/1-62793-352b\",\"width\":352},{\"height\":512,\"url\":\"https://vk.com/sticker/1-62793-512b\",\"width\":512}],\"product_id\":1308,\"sticker_id\":62793}}]",
+						// "attachments_count": "1"
 
-					// this is why replies won't work
-					if !strings.Contains(k, "attach") {
-						continue
-					}
-
-					// ['1', 'product', 'id']
-
-					tags := strings.Split(strings.Split(k, "attach")[1], "_")
-
-					if len(tags) <= 0 {
-						continue
-					}
-
-					id, _ := strconv.Atoi(tags[0])
-
-					attachment := attachmentsMap[id]
-
-					if len(tags) == 1 {
-						attachment.ID, _ = strconv.Atoi(v.(string))
-					} else if len(tags) > 1 {
-						typo := tags[1]
-
-						if typo == "product" {
-							attachment.ProductId, _ = strconv.Atoi(v.(string))
+						if strings.Contains(k, "attachments") {
+							continue
 						}
 
-						if typo == "type" {
-							attachment.Type = v.(string)
+						// this is why replies won't work
+						if !strings.Contains(k, "attach") {
+							continue
 						}
+
+						// ['1', 'product', 'id']
+
+						tags := strings.Split(strings.Split(k, "attach")[1], "_")
+
+						if len(tags) <= 0 {
+							continue
+						}
+
+						id, _ := strconv.Atoi(tags[0])
+
+						attachment := attachmentsMap[id]
+
+						if len(tags) == 1 {
+							attachment.ID, _ = strconv.Atoi(v.(string))
+						} else if len(tags) > 1 {
+							typo := tags[1]
+
+							if typo == "product" {
+								attachment.ProductId, _ = strconv.Atoi(v.(string))
+							}
+
+							if typo == "type" {
+								attachment.Type = v.(string)
+							}
+						}
+
+						attachmentsMap[id] = attachment
 					}
 
-					attachmentsMap[id] = attachment
+					attachments := []events.Attachment{}
+
+					for v := range maps.Values(attachmentsMap) {
+						attachments = append(attachments, v)
+					}
+
+					vk.Updater.Messages.Invoke(
+						events.NewMessage{
+							MessageId: jsonNumToInt(u[1]),
+							Flags:     jsonNumToInt(u[2]),
+							// MinorId:   jsonNumToInt(u[3]),
+							PeerId:      jsonNumToInt(u[3]),
+							Timestamp:   jsonNumToInt(u[4]),
+							Text:        u[5].(string),
+							Attachments: attachments,
+							// RandomId: jsonNumToInt(u[7]),
+						},
+					)
 				}
-
-				attachments := []events.Attachment{}
-
-				for v := range maps.Values(attachmentsMap) {
-					attachments = append(attachments, v)
-				}
-
-				vk.Updater.Messages.Invoke(
-					events.NewMessage{
-						MessageId: jsonNumToInt(u[1]),
-						Flags:     jsonNumToInt(u[2]),
-						// MinorId:   jsonNumToInt(u[3]),
-						PeerId:      jsonNumToInt(u[3]),
-						Timestamp:   jsonNumToInt(u[4]),
-						Text:        u[5].(string),
-						Attachments: attachments,
-						// RandomId: jsonNumToInt(u[7]),
-					},
-				)
 			}
 		}
+		ts = v.Ts
 	}
-
-	vk.longpoll(v.Ts)
 }
 
 func jsonNumToInt(jsonNumber any) int {
