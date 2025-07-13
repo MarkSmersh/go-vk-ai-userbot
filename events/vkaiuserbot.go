@@ -28,4 +28,6 @@ type VKAIUserBotConfig struct {
 	RequestWait int
 	// From 0 to 2. 1 is default
 	LLMTemparature float64
+	// That phrase will be used by LMM to prevent the bot from proceeding conversation with a user
+	SafePhrase string
 }

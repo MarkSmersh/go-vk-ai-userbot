@@ -10,7 +10,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/MarkSmersh/go-vk-ai-userbot/consts"
 	"github.com/MarkSmersh/go-vk-ai-userbot/types/vk/events"
 	"github.com/MarkSmersh/go-vk-ai-userbot/types/vk/general"
 	"github.com/MarkSmersh/go-vk-ai-userbot/types/vk/methods"
@@ -33,12 +35,10 @@ type Response struct {
 }
 
 func (vk *VK) Start() {
-	ls := vk.MessageGetLongPollServer(methods.MessagesGetLongPollServer{
+	vk.LongpollServer = vk.MessageGetLongPollServer(methods.MessagesGetLongPollServer{
 		NeedPts:   0,
 		LPVersion: 3,
 	})
-
-	vk.LongpollServer = ls
 
 	slog.Info("Vk Userbot is started")
 
@@ -75,6 +75,13 @@ func (vk *VK) longpoll() {
 		d.UseNumber()
 
 		d.Decode(&v)
+
+		if v.Failed != 0 {
+			vk.LongpollServer = vk.MessageGetLongPollServer(methods.MessagesGetLongPollServer{
+				NeedPts:   0,
+				LPVersion: 3,
+			})
+		}
 
 		// jsonBytes, _ := json.Marshal(v)
 		//
@@ -214,6 +221,12 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 
 		slog.Error(e.Error())
 
+		switch v.Error.ErrorCode {
+		case consts.VkErrorCaptcha:
+			{
+				time.Sleep(time.Minute * 30)
+			}
+		}
 		return nil, e
 	}
 

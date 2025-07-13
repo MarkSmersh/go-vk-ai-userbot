@@ -31,8 +31,9 @@ var config = events.VKAIUserBotConfig{
 	SecondsBeforeWrite: 20,
 	SymbolsPerSecond:   300,
 	Link:               "https://t.me/+4B_CFaEhQtM1MDMy",
-	RequestWait:        60,
+	RequestWait:        69,
 	LLMTemparature:     1.0,
+	SafePhrase:         "damn",
 }
 
 var bot = events.VKAIUserBot{
@@ -42,7 +43,7 @@ var bot = events.VKAIUserBot{
 	InviteState: inviteState,
 	Config:      config,
 	// TargetGroups: []int{216632235, 204981431, 205912478}, // it should strike
-	TargetGroups: []int{205912478}, // it should strike
+	TargetGroups: []int{216632235, 205912478}, // it should strike
 	FriendsAdded: []int{},
 }
 

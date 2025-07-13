@@ -33,7 +33,7 @@ func (b *VKAIUserBot) SendFriendRequests() {
 				break
 			}
 
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 		}
 	}
 

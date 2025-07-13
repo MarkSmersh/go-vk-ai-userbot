@@ -60,11 +60,13 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 
 		builder.Req.Instructions += fmt.Sprintf("\n\nTHE ONE AND ONLY LINK TO THE CHAT IS: %s", b.Config.Link)
 
+		builder.Req.Instructions += fmt.Sprintf("\n\nIF THE USER DO NOT WANT TO SPEAK WITH YOU, AGAINST OF THE CHAT (DO NOT WANT THE LINK, TO WANT TO ENTRY ETC) OR THE USER STARTS TROLL YOU, NAME YOU AS THE BOT, AI, CHATGPT ETC WRITE THE NEXT PHRASE (DO NOT CHANGE IT AND WRITE IT AS THE PART OF YOUR NEXT MESSAGE!): %s", b.Config.SafePhrase)
+
 		if b.InviteState.Get(e.PeerId) == consts.INVITE_SENT {
 			builder.Req.Instructions += "\n\n!WARNING!\nYOU'VE' SENT THE LINK. FROM NOW ONLY WHAT YOU SHOULD DO IS TO SHORTLY ANSWER (VERY VERY SHORT) ON USER'S REQUESTS AND SAY THAT YOU WILL TALK WITH HIM IN THE GROUP. YOU CAN SPEAK WITH THEM IF THAT WILL LEAD TO GAINING THEIR ACTIVITY IN THE GROUP. DO NOT SEND LINK ANYMORE AND ON USER'S REQUEST AND ANSWER THAT YOU'VE ALREADY SENT THE LINK. DO NOT SEND THE LINK. NEVER."
 		}
 
-		builder.Req.Instructions += fmt.Sprintf("Now is %v", time.Now())
+		builder.Req.Instructions += fmt.Sprintf("\n\nCURRENT TIME IS %v", time.Now())
 
 		self := b.Vk.UsersGet(methods.UsersGet{})[0]
 
@@ -122,7 +124,7 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 
 		time.Sleep(time.Second * time.Duration(len(text)/b.Config.SymbolsPerSecond))
 
-		if b.InviteState.Get(e.PeerId) == consts.INVITE_SENT {
+		if b.InviteState.Get(e.PeerId) == consts.INVITE_SENT || strings.Contains(text, b.Config.SafePhrase) {
 			b.InviteState.Set(e.PeerId, consts.INVITE_OVER)
 		}
 
