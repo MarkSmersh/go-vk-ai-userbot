@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-func GetEnv() map[string]string {
+func GetEnv(file string) map[string]string {
 	envs := map[string]string{}
 
-	fileData, err := os.ReadFile(".env")
+	fileData, err := os.ReadFile(file)
 
 	if err != nil {
 		log.Fatalln(".env is missing")

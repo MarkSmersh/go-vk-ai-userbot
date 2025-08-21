@@ -1,12 +1,15 @@
 package events
 
-import "github.com/MarkSmersh/go-vk-ai-userbot/core"
+import (
+	"github.com/MarkSmersh/go-vk-ai-userbot/core"
+	"github.com/redis/go-redis/v9"
+)
 
 type VKAIUserBot struct {
-	Vk          core.VK
-	OAi         core.OpenAI
-	TypingState core.State[int, bool]
-	InviteState core.State[int, int]
+	Vk   core.VK
+	OAi  core.OpenAI
+	Dpsk core.Deepseek
+	Rdb  *redis.Client
 	// Groups you want to use to get friends from
 	TargetGroups []int
 	FriendsAdded []int

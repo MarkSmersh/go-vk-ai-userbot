@@ -1,9 +1,10 @@
 package openai
 
-type ModelRequest struct {
+type Request struct {
 	Background        bool              `json:"background,omitempty"`
 	Include           []string          `json:"include,omitempty"`
-	Input             []Input           `json:"input,omitempty"` // can be string, []any, or other
+	Input             []Input           `json:"input,omitempty"`    // can be string, []any, or other
+	Messages          []Input           `json:"messages,omitempty"` // used by Deepseek
 	Instructions      string            `json:"instructions,omitempty"`
 	MaxOutputTokens   int               `json:"max_output_tokens,omitempty"`
 	MaxToolCalls      int               `json:"max_tool_calls,omitempty"`

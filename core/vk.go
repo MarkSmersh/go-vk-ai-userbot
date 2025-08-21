@@ -59,8 +59,6 @@ func (vk *VK) longpoll() {
 			3,
 		)
 
-		slog.Debug(url)
-
 		res, err := http.Get(url)
 
 		if err != nil {
@@ -76,11 +74,15 @@ func (vk *VK) longpoll() {
 
 		d.Decode(&v)
 
-		if v.Failed != 0 {
+		if v.Failed > 0 {
+			slog.Error(v.Error)
+
 			vk.LongpollServer = vk.MessageGetLongPollServer(methods.MessagesGetLongPollServer{
 				NeedPts:   0,
 				LPVersion: 3,
 			})
+
+			time.Sleep(1 * time.Second)
 		}
 
 		// jsonBytes, _ := json.Marshal(v)

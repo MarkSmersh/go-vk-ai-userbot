@@ -15,7 +15,7 @@ type OpenAI struct {
 	Token string
 }
 
-func (o *OpenAI) Request(b RequestBuilder) openai.Response {
+func (o *OpenAI) Request(b OpenAIRequestBuilder) openai.Response {
 	body, _ := json.Marshal(b.Req)
 
 	r := bytes.NewReader(body)
@@ -24,32 +24,43 @@ func (o *OpenAI) Request(b RequestBuilder) openai.Response {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", o.Token))
+	req.Header.Add("Connection", "keep-alive")
 
 	res, err := http.DefaultClient.Do(req)
 
 	resBody, _ := io.ReadAll(res.Body)
 
+	var v openai.Response
+
+	defer res.Body.Close()
+
 	if err != nil {
 		slog.Error(err.Error())
 	}
 
-	v := openai.Response{}
+	if res.StatusCode >= 400 {
+		slog.Error(
+			fmt.Sprintf("Error from OpenAI. Status: %s. Message: %s", res.Status, string(resBody)),
+		)
+
+		return v
+	}
 
 	json.Unmarshal(resBody, &v)
 
 	return v
 }
 
-type RequestBuilder struct {
-	Req openai.ModelRequest
+type OpenAIRequestBuilder struct {
+	Req openai.Request
 }
 
-func CreateRequestBuilder(model string) RequestBuilder {
-	b := RequestBuilder{}
+func CreateOpenAIBuilder(model string) OpenAIRequestBuilder {
+	b := OpenAIRequestBuilder{}
 	b.Req.Model = model
 	return b
 }
 
-func (b *RequestBuilder) AddInput(content string, role string) {
+func (b *OpenAIRequestBuilder) AddInput(content string, role string) {
 	b.Req.Input = append(b.Req.Input, openai.Input{Role: role, Content: content})
 }
