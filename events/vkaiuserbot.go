@@ -12,6 +12,7 @@ type VKAIUserBot struct {
 	Rdb  *redis.Client
 	// Groups you want to use to get friends from
 	TargetGroups []int
+	Typing       core.State[int, bool]
 	FriendsAdded []int
 	Config       VKAIUserBotConfig
 }

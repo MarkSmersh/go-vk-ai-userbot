@@ -42,13 +42,15 @@ var rdb = redis.NewClient(&redis.Options{
 	DB:       redisDb,
 })
 
+var typing = core.State[int, bool]{}
+
 var bot = events.VKAIUserBot{
-	Vk:     vk,
-	Dpsk:   dpsk,
-	Config: config,
-	Rdb:    rdb,
-	// TargetGroups: []int{216632235, 204981431, 205912478}, // it should strike
-	TargetGroups: []int{221578984, 141103259}, // it should strike
+	Vk:           vk,
+	Dpsk:         dpsk,
+	Config:       config,
+	Rdb:          rdb,
+	Typing:       typing,
+	TargetGroups: []int{200651056, 117082191, 220858832, 220399071, 221529283}, // it should strike
 	FriendsAdded: []int{},
 }
 

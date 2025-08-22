@@ -151,7 +151,7 @@ func (vk *VK) longpoll() {
 						attachments = append(attachments, v)
 					}
 
-					vk.Updater.Messages.Invoke(
+					go vk.Updater.Messages.Invoke(
 						events.NewMessage{
 							MessageId: jsonNumToInt(u[1]),
 							Flags:     jsonNumToInt(u[2]),

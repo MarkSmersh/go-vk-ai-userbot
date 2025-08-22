@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// deprecated
 func (b *VKAIUserBot) IsTyping(id int) (bool, error) {
 	typing, err := b.Rdb.Get(
 		context.Background(),
@@ -36,6 +37,7 @@ func (b *VKAIUserBot) IsTyping(id int) (bool, error) {
 	return false, err
 }
 
+// deprecated
 func (b *VKAIUserBot) TypingSet(id int, state bool) error {
 	_, err := b.Rdb.Set(
 		context.Background(),
