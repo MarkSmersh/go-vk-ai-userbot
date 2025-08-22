@@ -117,7 +117,7 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 	for i := range 3 {
 		v := b.Dpsk.Request(builder)
 
-		if len(v.Choices) <= 0 {
+		if len(v.Choices) <= 0 || len(v.Choices[0].Message.Content) <= 0 {
 			slog.Warn(
 				fmt.Sprintf("Try #%d (max 3) to get response from LLM was unsuccessful.", i+1),
 			)
