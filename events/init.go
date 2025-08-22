@@ -19,9 +19,9 @@ func (b *VKAIUserBot) Init() {
 
 	b.Vk.Updater.Messages.Add(b.NewMessage)
 
-	// b.CacheFriends()
-	//
+	b.CacheFriends()
+
 	go b.EventsFromUnread()
-	// go b.SendFriendRequests()
+	go b.SendFriendRequests()
 	go b.Vk.Start()
 }
