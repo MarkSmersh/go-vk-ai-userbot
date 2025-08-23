@@ -228,6 +228,10 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 			{
 				time.Sleep(time.Minute * 30)
 			}
+		case consts.VkErrorFloodControl:
+			{
+				time.Sleep(time.Minute * 15)
+			}
 		}
 		return nil, e
 	}

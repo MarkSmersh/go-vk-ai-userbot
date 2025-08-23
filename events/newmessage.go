@@ -119,8 +119,10 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 
 		if len(v.Choices) <= 0 || len(v.Choices[0].Message.Content) <= 0 {
 			slog.Warn(
-				fmt.Sprintf("Try #%d (max 3) to get response from LLM was unsuccessful.", i+1),
+				fmt.Sprintf("Try #%d (max 3) to get response from LLM was unsuccessful. Next try in 5 minutes.", i+1),
 			)
+
+			time.Sleep(5 * time.Minute)
 
 			continue
 		}
@@ -131,12 +133,14 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 	}
 
 	if len(text) <= 0 {
-		slog.Error("Cannot get LLM's response after 3 tries. Looks like:\n- You need to top up balance\n- API key is expired or absent\n- Input prompt is diabolical\n- LLM's servers are down\n- LLM's are not accesseble in your country\n- AI Gen bubble blew up")
+		slog.Error("Cannot get LLM's response after 3 tries. Looks like:\n- https://api-docs.deepseek.com/faq#why-are-empty-lines-continuously-returned-when-calling-the-api\n- You need to top up balance\n- API key is expired or absent\n- Input prompt is diabolical\n- LLM's servers are down\n- LLM's are not accesseble in your country\n- AI Gen bubble blew up")
 
 		b.Vk.MessagesSend(methods.MessagesSend{
 			UserID:  e.PeerId,
 			Message: "?",
 		})
+
+		b.Typing.Set(e.PeerId, false)
 
 		return
 	}

@@ -1,5 +1,6 @@
 package consts
 
 const (
-	VkErrorCaptcha = 14
+	VkErrorFloodControl = 9
+	VkErrorCaptcha      = 14
 )

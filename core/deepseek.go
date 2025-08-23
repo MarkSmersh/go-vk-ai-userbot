@@ -26,9 +26,13 @@ func (o *Deepseek) Request(b DeepseekRequestBuilder) deepseek.Response {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", o.Token))
 	req.Header.Add("Connection", "keep-alive")
 
+	slog.Debug(req.URL.String())
+
 	res, err := http.DefaultClient.Do(req)
 
 	resBody, _ := io.ReadAll(res.Body)
+
+	slog.Debug(string(resBody))
 
 	var v deepseek.Response
 
