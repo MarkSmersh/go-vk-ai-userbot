@@ -97,7 +97,7 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 
 		if m.FromID == self.ID {
 			builder.AddInput(
-				fmt.Sprintf("%s %s:\n%s", self.FirstName, self.LastName, text),
+				text,
 				consts.ASSISTANT,
 			)
 		} else {
