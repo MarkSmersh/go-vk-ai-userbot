@@ -7,5 +7,5 @@ TODO:
 - [x] Cache friends and friend request to the memory
 - [x] Create events from unread to answer on messages during bot's unactivity
 - [x] Use a DB (Redis) to store information about progress state of each user
+- [x] Rewrite configs in such way so all can be setup fron enviroment variables so creating multiple userbots will be easy as getting flood error from VK API
 - [ ] Use captcha solver to prevent VK's tries to evade TBCITW's speading with CAPTCHA errors
-- [ ] Rewrite configs in such way so all can be setup fron enviroment variables so creating multiple userbots will be easy as getting flood error from VK API
