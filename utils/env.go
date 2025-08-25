@@ -72,3 +72,38 @@ func GetEnvFloat(key string) float64 {
 
 	return v
 }
+
+func GetEnvArray(key string) []int {
+	str := os.Getenv(key)
+	result := []int{}
+
+	if str == "" {
+		return result
+	}
+
+	array := strings.Split(str, ",")
+
+	if len(array) <= 0 {
+		slog.Warn(
+			fmt.Sprintf("Env variable %s has value %s, but expected array int type", key, str),
+		)
+
+		return result
+	}
+
+	for _, i := range array {
+		v, err := strconv.Atoi(i)
+
+		if err != nil {
+			slog.Warn(
+				fmt.Sprintf("Element inside array %s of env variable %s has value %s, but expected int type", str, key, i),
+			)
+
+			continue
+		}
+
+		result = append(result, v)
+	}
+
+	return result
+}

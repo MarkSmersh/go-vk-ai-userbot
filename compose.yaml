@@ -19,5 +19,6 @@ services:
       REQUEST_WAIT: 60
       LLM_TEMPERATURE: 1.5
       SAFE_PHRASE: damn
+      TARGET_GROUPS: 123,456,789
 
 

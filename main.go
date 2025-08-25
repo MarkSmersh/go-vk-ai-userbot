@@ -53,7 +53,7 @@ func main() {
 		Config:       config,
 		Rdb:          rdb,
 		Typing:       typing,
-		TargetGroups: []int{200651056, 117082191, 220858832, 220399071, 221529283}, // it should strike
+		TargetGroups: utils.GetEnvArray("TARGET_GROUPS"), // it should strike
 		FriendsAdded: []int{},
 	}
 
