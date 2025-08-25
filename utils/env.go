@@ -1,19 +1,21 @@
 package utils
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 )
 
-func GetEnv(file string) map[string]string {
+func LoadDotEnv(file string) {
 	envs := map[string]string{}
 
 	fileData, err := os.ReadFile(file)
 
 	if err != nil {
-		log.Fatalln(".env is missing")
-		return envs
+		slog.Warn(".env file is missing")
+		return
 	}
 
 	data := strings.Split(string(fileData), "\n") // ranging through SplitSeq is more effective blah-blah-blah
@@ -26,10 +28,47 @@ func GetEnv(file string) map[string]string {
 			v := line[1]
 
 			if k != "" && v != "" {
+				if os.Getenv(k) == "" {
+					os.Setenv(k, v)
+				}
 				envs[k] = v
 			}
 		}
 	}
+}
 
-	return envs
+func GetEnvInt(key string) int {
+	str := os.Getenv(key)
+
+	if str == "" {
+		return 0
+	}
+
+	v, err := strconv.Atoi(str)
+
+	if err != nil {
+		slog.Warn(
+			fmt.Sprintf("Env variable %s has value %s, but expected int type", key, str),
+		)
+	}
+
+	return v
+}
+
+func GetEnvFloat(key string) float64 {
+	str := os.Getenv(key)
+
+	if str == "" {
+		return 0
+	}
+
+	v, err := strconv.ParseFloat(str, 64)
+
+	if err != nil {
+		slog.Warn(
+			fmt.Sprintf("Env variable %s has value %s, but expected float type", key, str),
+		)
+	}
+
+	return v
 }

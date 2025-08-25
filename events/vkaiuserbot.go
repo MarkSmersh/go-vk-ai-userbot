@@ -30,7 +30,7 @@ type VKAIUserBotConfig struct {
 	Link string
 	// Time to wait in seconds before next friend request
 	RequestWait int
-	// From 0 to 2. 1 is default
+	// From 1 to 2. 1 is default
 	LLMTemparature float64
 	// That phrase will be used by LMM to prevent the bot from proceeding conversation with a user
 	SafePhrase string

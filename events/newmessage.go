@@ -39,7 +39,7 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 
 	time.Sleep(time.Second * time.Duration(b.Config.SecondsBeforeWrite))
 
-	builder := core.CreateRequestDeepseekBuilder(consts.DEEPSEEK_REASONER)
+	builder := core.CreateOpenAIBuilder(consts.GPT_5_MINI)
 
 	self := b.Vk.UsersGet(methods.UsersGet{})[0]
 
@@ -59,7 +59,7 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 
 	instructions += fmt.Sprintf("\n\nCURRENT TIME IS %v", time.Now())
 
-	builder.AddMessage(instructions, consts.SYSTEM, "SYSTEM")
+	builder.Req.Instructions = instructions
 
 	messages := b.Vk.MessagesGetHistory(methods.MessagesGetHistory{
 		Count:  b.Config.MessagesInHistory,
@@ -96,28 +96,27 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 		}
 
 		if m.FromID == self.ID {
-			builder.AddMessage(
-				text,
+			builder.AddInput(
+				fmt.Sprintf("%s %s:\n%s", self.FirstName, self.LastName, text),
 				consts.ASSISTANT,
-				self.FirstName+" "+self.LastName,
 			)
 		} else {
-			builder.AddMessage(
-				text,
+			builder.AddInput(
+				fmt.Sprintf("%s %s:\n%s", user.FirstName, user.LastName, text),
 				consts.USER,
-				user.FirstName+" "+user.LastName,
 			)
 		}
 	}
 
-	builder.Req.Temperature = b.Config.LLMTemparature
+	// Temperature is not supported with GPT 5 MINI :(
+	// builder.Req.Temperature = b.Config.LLMTemparature
 
 	text := ""
 
 	for i := range 3 {
-		v := b.Dpsk.Request(builder)
+		v := b.OAi.Request(builder)
 
-		if len(v.Choices) <= 0 || len(v.Choices[0].Message.Content) <= 0 {
+		if len(v.Output) <= 0 || len(v.Output[1].Content) <= 0 {
 			slog.Warn(
 				fmt.Sprintf("Try #%d (max 3) to get response from LLM was unsuccessful. Next try in 5 minutes.", i+1),
 			)
@@ -127,7 +126,7 @@ func (b *VKAIUserBot) NewMessage(e events.NewMessage) {
 			continue
 		}
 
-		text = v.Choices[0].Message.Content
+		text = v.Output[1].Content[0].Text
 
 		break
 	}
