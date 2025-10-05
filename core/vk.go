@@ -165,7 +165,9 @@ func (vk *VK) longpoll() {
 					)
 				}
 			}
+
 		}
+
 		ts = v.Ts
 	}
 }

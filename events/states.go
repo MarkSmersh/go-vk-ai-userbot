@@ -6,61 +6,24 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
-	"time"
 )
 
-// deprecated
-func (b *VKAIUserBot) IsTyping(id int) (bool, error) {
-	typing, err := b.Rdb.Get(
-		context.Background(),
-		fmt.Sprintf("typing:%d", id),
-	).Result()
-
-	if err != nil {
-		return false, err
-	}
-
-	if typing == "true" {
-		return true, nil
-	}
-
-	if typing == "false" {
-		return false, nil
-	}
-
-	err = errors.New(
-		fmt.Sprintf("Invalid format for data should be (true/false) got %s", typing),
-	)
-
-	slog.Error(err.Error())
-
-	return false, err
+func (b *VKAIUserBot) IsTyping(id int) bool {
+	return b.typing.Get(id)
 }
 
-// deprecated
-func (b *VKAIUserBot) TypingSet(id int, state bool) error {
-	_, err := b.Rdb.Set(
-		context.Background(),
-		fmt.Sprintf("typing:%d", id),
-		fmt.Sprintf("%t", state),
-		5*time.Minute,
-	).Result()
-
-	if err != nil {
-		slog.Error(err.Error())
-	}
-
-	return err
+func (b *VKAIUserBot) SetTyping(id int, state bool) {
+	b.typing.Set(id, state)
 }
 
-func (b *VKAIUserBot) ProgressGet(id int) (int, error) {
+func (b *VKAIUserBot) GetProgress(id int) (int, error) {
 	progressStr, err := b.Rdb.Get(
 		context.Background(),
 		fmt.Sprintf("progress:%d", id),
 	).Result()
 
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 
 	progress, err := strconv.Atoi(progressStr)
@@ -76,7 +39,7 @@ func (b *VKAIUserBot) ProgressGet(id int) (int, error) {
 	return progress, err
 }
 
-func (b *VKAIUserBot) ProgressSet(id int, progress int) error {
+func (b *VKAIUserBot) SetProgress(id int, progress int) error {
 	_, err := b.Rdb.Set(
 		context.Background(),
 		fmt.Sprintf("progress:%d", id),

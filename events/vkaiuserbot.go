@@ -2,19 +2,44 @@ package events
 
 import (
 	"github.com/MarkSmersh/go-vk-ai-userbot/core"
+	"github.com/MarkSmersh/go-vk-ai-userbot/core/llm"
 	"github.com/redis/go-redis/v9"
 )
 
 type VKAIUserBot struct {
-	Vk   core.VK
-	OAi  core.OpenAI
-	Dpsk core.Deepseek
-	Rdb  *redis.Client
+	Vk  core.VK
+	LLM llm.LLMModel
+	Rdb *redis.Client
 	// Groups you want to use to get friends from
 	TargetGroups []int
-	Typing       core.State[int, bool]
-	FriendsAdded []int
 	Config       VKAIUserBotConfig
+
+	friends        []int
+	friendRequests []int
+	typing         core.State[int, bool]
+}
+
+func NewVKAIUserBot(
+	vk core.VK,
+	llm llm.LLMModel,
+	rdb *redis.Client,
+	targetGroups []int,
+	config VKAIUserBotConfig,
+) VKAIUserBot {
+	bot := VKAIUserBot{
+		Vk:             vk,
+		LLM:            llm,
+		Rdb:            rdb,
+		TargetGroups:   targetGroups,
+		Config:         config,
+		friends:        []int{},
+		friendRequests: []int{},
+		typing:         core.State[int, bool]{},
+	}
+
+	bot.ApplyDefaultConfigValues()
+
+	return bot
 }
 
 type VKAIUserBotConfig struct {

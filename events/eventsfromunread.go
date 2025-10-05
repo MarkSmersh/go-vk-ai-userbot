@@ -12,7 +12,7 @@ func (b *VKAIUserBot) EventsFromUnread() {
 
 	for _, i := range chats.Items {
 		if i.Conversation.Peer.Type == "user" {
-			b.Vk.Updater.Messages.Invoke(
+			go b.Vk.Updater.Messages.Invoke(
 				events.NewMessage{
 					MessageId: i.LastMessage.ID,
 					Flags:     0, // there is no flags

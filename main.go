@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/MarkSmersh/go-vk-ai-userbot/core"
+	"github.com/MarkSmersh/go-vk-ai-userbot/core/llm"
 	"github.com/MarkSmersh/go-vk-ai-userbot/events"
 	"github.com/MarkSmersh/go-vk-ai-userbot/utils"
 	"github.com/redis/go-redis/v9"
@@ -20,12 +21,19 @@ func main() {
 		Version: "5.199",
 	}
 
-	// var dpsk = core.Deepseek{
-	// 	Token: os.Getenv("DEEPSEEK_TOKEN"),
-	// }
+	var llmModel llm.LLMModel
 
-	var openai = core.OpenAI{
-		Token: os.Getenv("OPENAI_TOKEN"),
+	if token := os.Getenv("OPENAI_TOKEN"); len(token) > 0 {
+		llmModel = llm.NewOpenAI(token)
+	}
+
+	if token := os.Getenv("DEEPSEEK_TOKEN"); len(token) > 0 {
+		llmModel = llm.NewDeepseek(token)
+	}
+
+	if llmModel == nil {
+		slog.Error("There is no any provided token for llm. Use an OPENAI_TOKEN or DEEPSEEK_TOKEN enviroment variable.")
+		os.Exit(1)
 	}
 
 	var config = events.VKAIUserBotConfig{
@@ -45,17 +53,13 @@ func main() {
 		DB:       utils.GetEnvInt("REDIS_DB"),
 	})
 
-	var typing = core.State[int, bool]{}
-
-	var bot = events.VKAIUserBot{
-		Vk:           vk,
-		OAi:          openai,
-		Config:       config,
-		Rdb:          rdb,
-		Typing:       typing,
-		TargetGroups: utils.GetEnvArray("TARGET_GROUPS"), // it should strike
-		FriendsAdded: []int{},
-	}
+	var bot = events.NewVKAIUserBot(
+		vk,
+		llmModel,
+		rdb,
+		utils.GetEnvArray("TARGET_GROUPS"),
+		config,
+	)
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 

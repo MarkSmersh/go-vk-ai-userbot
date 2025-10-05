@@ -59,19 +59,20 @@ func (b *VKAIUserBot) SendFriendRequests() {
 		fmt.Sprintf("Members gathered from TargetGroups (%d). Start sending requests", len(members)),
 	)
 
-	for _, m := range members {
-		if !slices.Contains(b.FriendsAdded, m) {
+	for _, member := range members {
+		if !slices.Contains(b.friendRequests, member) && !slices.Contains(b.friends, member) {
 			b.Vk.FriendsAdd(methods.FriendsAdd{
-				UserID: m,
+				UserID: member,
 			})
 
-			b.FriendsAdded = append(b.FriendsAdded, m)
+			b.AddFriendRequests(member)
 
-			// this is one and only line of code, that keeps VKAPI from blocking account
+			// this is one and only line of code, that keeps VKAPI from blocking an account
 			// a truly divine technique
+			// UPD: a deprecated information
 			time.Sleep(time.Second * time.Duration(b.Config.RequestWait))
 		}
 	}
 
-	slog.Info("Friend requests are sent for each member of groups represented in TargetGroups. If you want to proceed, add more groups")
+	slog.Warn("Friend requests are sent for an each member of groups represented in targetGroups. If you want to proceed, add more groups")
 }
