@@ -24,7 +24,7 @@ func (b *VKAIUserBot) Init() {
 	b.CacheFriendsAndRequests()
 
 	go b.EventsFromNewFriends()
-	// go b.EventsFromUnread()
+	go b.EventsFromUnread()
 	go b.SendFriendRequests()
 	go b.Vk.Start()
 }
