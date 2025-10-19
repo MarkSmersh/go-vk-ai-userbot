@@ -10,10 +10,11 @@ func (b *VKAIUserBot) CacheFriendsAndRequests() {
 	friends := b.Vk.FriendsGet(methods.FriendsGet{}).Items
 	b.AddFriends(friends...)
 
-	for {
+	for i := 0; ; i++ {
 		requests := b.Vk.FriendsGetRequests(methods.FriendsGetRequests{
-			Out:   1,
-			Count: 1000,
+			Out:    1,
+			Count:  1000,
+			Offset: i * 1000,
 		}).Items
 
 		b.AddFriendRequests(requests...)
