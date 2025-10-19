@@ -402,3 +402,8 @@ func (vk *VK) FriendsAdd(params methods.FriendsAdd) int {
 	json.Unmarshal(res, &v)
 	return v
 }
+
+func (vk *VK) Execute(params methods.Execute) []byte {
+	res, _ := vk.Request("execute", params)
+	return res
+}

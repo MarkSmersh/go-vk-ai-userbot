@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/MarkSmersh/go-vk-ai-userbot/types/vk/methods"
@@ -59,20 +60,51 @@ func (b *VKAIUserBot) SendFriendRequests() {
 		fmt.Sprintf("Members gathered from TargetGroups (%d). Start sending requests", len(members)),
 	)
 
+	// the depricated method. Changed to execute method in order to prevent a flood control error
+
+	// for _, member := range members {
+	// 	if !slices.Contains(b.friendRequests, member) && !slices.Contains(b.friends, member) {
+	// 		b.Vk.FriendsAdd(methods.FriendsAdd{
+	// 			UserID: member,
+	// 		})
+	//
+	// 		b.AddFriendRequests(member)
+	//
+	// 		// this is one and only line of code, that keeps VKAPI from blocking an account
+	// 		// a truly divine technique
+	// 		// UPD: a deprecated information
+	// 		time.Sleep(time.Second * time.Duration(b.Config.RequestWait))
+	// 	}
+	// }
+
+	membersQueue := []int{}
+	code := []string{}
+
 	for _, member := range members {
 		if !slices.Contains(b.friendRequests, member) && !slices.Contains(b.friends, member) {
-			b.Vk.FriendsAdd(methods.FriendsAdd{
-				UserID: member,
+			code = append(
+				code,
+				fmt.Sprintf("results.push(API.friends.add({\"user_id\": %d}));", member),
+			)
+			membersQueue = append(membersQueue, member)
+		}
+
+		if len(membersQueue) >= 5 {
+			b.Vk.Execute(methods.Execute{
+				Code: fmt.Sprintf("var results = [];\n%s\nreturn results;", strings.Join(code, "\n")),
 			})
 
-			b.AddFriendRequests(member)
+			b.AddFriendRequests(membersQueue...)
 
-			// this is one and only line of code, that keeps VKAPI from blocking an account
-			// a truly divine technique
-			// UPD: a deprecated information
-			time.Sleep(time.Second * time.Duration(b.Config.RequestWait))
+			membersQueue = []int{}
+			code = []string{}
+
+			time.Sleep(time.Duration(b.Config.RequestWait) * time.Second * 5)
 		}
 	}
 
-	slog.Warn("Friend requests are sent for an each member of groups represented in targetGroups. If you want to proceed, add more groups")
+	go func() {
+		slog.Warn("Friend requests are sent for an each member of groups represented in targetGroups. If you want to proceed, add more groups")
+		time.Sleep(5 * time.Minute)
+	}()
 }

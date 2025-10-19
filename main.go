@@ -45,6 +45,7 @@ func main() {
 		RequestWait:        utils.GetEnvInt("REQUEST_WAIT"),
 		LLMTemparature:     utils.GetEnvFloat("LLM_TEMPERATURE"),
 		SafePhrase:         os.Getenv("SAFE_PHRASE"),
+		NewFriendsCheck:    utils.GetEnvInt("NEW_FRIENDS_CHECK"),
 	}
 
 	var rdb = redis.NewClient(&redis.Options{

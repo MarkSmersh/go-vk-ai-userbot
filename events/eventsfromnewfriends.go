@@ -10,7 +10,7 @@ import (
 
 func (b *VKAIUserBot) EventsFromNewFriends() {
 	for {
-		time.Sleep(1 * time.Minute)
+		time.Sleep(time.Duration(b.Config.NewFriendsCheck) * time.Minute)
 
 		newFriends := b.Vk.FriendsGet(methods.FriendsGet{}).Items
 

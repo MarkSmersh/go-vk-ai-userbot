@@ -23,7 +23,7 @@ func (b *VKAIUserBot) ApplyDefaultConfigValues() {
 	}
 
 	if b.Config.Link == "" {
-		slog.Error("Link value in VKAIUserBot config is necessary.")
+		slog.Error("The Link value in VKAIUserBot config is necessary.")
 		os.Exit(1)
 	}
 
@@ -37,5 +37,9 @@ func (b *VKAIUserBot) ApplyDefaultConfigValues() {
 
 	if b.Config.SafePhrase == "" {
 		b.Config.SafePhrase = "damn"
+	}
+
+	if b.Config.NewFriendsCheck == 0 {
+		b.Config.NewFriendsCheck = 20
 	}
 }

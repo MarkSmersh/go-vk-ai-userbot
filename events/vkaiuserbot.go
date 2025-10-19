@@ -59,4 +59,6 @@ type VKAIUserBotConfig struct {
 	LLMTemparature float64
 	// That phrase will be used by LMM to prevent the bot from proceeding conversation with a user
 	SafePhrase string
+	// Time to check are there any new applied friend requests (minutes)
+	NewFriendsCheck int
 }
