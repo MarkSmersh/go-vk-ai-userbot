@@ -13,6 +13,7 @@ import (
 
 func (b *VKAIUserBot) SendFriendRequests() {
 	if len(b.TargetGroups) <= 0 {
+		slog.Info("Cannot send friend requests due to an absence of the groups")
 		return
 	}
 
@@ -40,9 +41,7 @@ func (b *VKAIUserBot) SendFriendRequests() {
 
 	ms := []int{}
 
-	// id 524147853 is used as a head id, and id 632047853 as tail id
-	// to create a range of people who registered in VK from 2019 to 2021
-
+	// user ids in represented range a registered in VK from 2019 to 2021
 	for _, m := range members {
 		if m > 524147853 && m < 632047853 {
 			ms = append(ms, m)
@@ -90,11 +89,15 @@ func (b *VKAIUserBot) SendFriendRequests() {
 		}
 
 		if len(membersQueue) >= 5 {
-			b.Vk.Execute(methods.Execute{
+			res, _ := b.Vk.Execute(methods.Execute{
 				Code: fmt.Sprintf("var results = [];\n%s\nreturn results;", strings.Join(code, "\n")),
 			})
 
-			b.AddFriendRequests(membersQueue...)
+			for i, code := range res {
+				if code > 0 {
+					b.AddFriendRequests(membersQueue[i])
+				}
+			}
 
 			membersQueue = []int{}
 			code = []string{}

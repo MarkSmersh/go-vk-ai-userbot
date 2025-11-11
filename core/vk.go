@@ -29,9 +29,18 @@ type VK struct {
 	LongpollServer general.LongPollServer
 }
 
+type ExecuteError struct {
+	Method    string `json:"method"`               // API method name, e.g. "friends.add"
+	ErrorCode int    `json:"error_code"`           // VK API error code (e.g. 9 for Flood control)
+	ErrorMsg  string `json:"error_msg"`            // Human-readable error message
+	View      string `json:"view,omitempty"`       // Optional additional data (null in this case)
+	I18nTitle string `json:"i18n_title,omitempty"` // Optional localized title (null in this case)
+}
+
 type Response struct {
-	Error    general.Error `json:"error"`
-	Response any           `json:"response"`
+	Error         general.Error  `json:"error"`
+	Response      any            `json:"response"`
+	ExecuteErrors []ExecuteError `json:"execute_errors"`
 }
 
 func (vk *VK) Start() {
@@ -192,12 +201,26 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 		d.Decode(&paramsMap)
 
 		for k, v := range paramsMap {
-			paramsValues.Add(k, fmt.Sprintf("%v", v))
+			var value string
+
+			switch v.(type) {
+			case int:
+				value, _ = v.(string)
+				break
+			case string:
+				value, _ = v.(string)
+				break
+			default:
+				temp, _ := v.(any)
+				valueBytes, _ := json.Marshal(temp)
+				value = string(valueBytes)
+			}
+			paramsValues.Add(k, string(value))
 		}
 	}
 
 	url := fmt.Sprintf(
-		"https://api.vk.com/method/%s?%s&access_token=%s&v=%s",
+		"https://api.vk.ru/method/%s?%s&access_token=%s&v=%s",
 		method,
 		paramsValues.Encode(),
 		vk.Token,
@@ -209,6 +232,7 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 	res, err := http.Get(url)
 
 	if err != nil {
+		slog.Error(err.Error())
 		return []byte{}, err
 	}
 
@@ -216,7 +240,11 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 
 	d := json.NewDecoder(res.Body)
 	d.UseNumber()
-	d.Decode(&v)
+	err = d.Decode(&v)
+
+	if err != nil {
+		slog.Error(err.Error())
+	}
 
 	if v.Error.ErrorCode != 0 {
 		e := errors.New(
@@ -232,10 +260,24 @@ func (vk *VK) Request(method string, params any) ([]byte, error) {
 			}
 		case consts.VkErrorFloodControl:
 			{
-				time.Sleep(time.Minute * 15)
+				time.Sleep(time.Minute * 120)
 			}
 		}
 		return nil, e
+	}
+
+	if v.ExecuteErrors != nil && len(v.ExecuteErrors) > 0 {
+		for _, e := range v.ExecuteErrors {
+			if e.ErrorCode == consts.VkErrorFloodControl {
+				time.Sleep(time.Minute * 120)
+				break
+			}
+
+			if e.ErrorCode == consts.VkErrorCaptcha {
+				time.Sleep(time.Minute * 30)
+				break
+			}
+		}
 	}
 
 	result, _ := json.Marshal(v.Response)
@@ -346,7 +388,11 @@ type GroupsGetMembersRes struct {
 }
 
 func (vk *VK) GroupsGetMembers(params methods.GroupsGetMembers) GroupsGetMembersRes {
-	res, _ := vk.Request("groups.getMembers", params)
+	res, err := vk.Request("groups.getMembers", params)
+
+	if err != nil {
+		slog.Error(err.Error())
+	}
 
 	v := GroupsGetMembersRes{}
 
@@ -403,7 +449,14 @@ func (vk *VK) FriendsAdd(params methods.FriendsAdd) int {
 	return v
 }
 
-func (vk *VK) Execute(params methods.Execute) []byte {
-	res, _ := vk.Request("execute", params)
-	return res
+// Executes a given code and returns data in the next format
+//
+//	{
+//		0: 1 // where 0 is an index of a request in your code and 1 - execution code
+//	}
+func (vk *VK) Execute(params methods.Execute) ([]int, error) {
+	res, err := vk.Request("execute", params)
+	v := []int{}
+	json.Unmarshal(res, &v)
+	return v, err
 }
